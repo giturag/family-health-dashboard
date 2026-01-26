@@ -62,7 +62,7 @@ Health records are often fragmented across different facilities and paper-based 
 ![Admin Dashboard](docs/screenshots/admin-dashboard.png)
 
 ## Database Schema
-![Database Schema](docs/screenshots/ERD%20Diagram.png.png)
+![Database Schema](docs/screenshots/ERD%20Diagram.png)
 
 
 ## Security & Privacy Note
