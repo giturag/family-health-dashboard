@@ -1,71 +1,129 @@
-# Family Health Dashboard System
+# Family Health Dashboard
 
-## Overview
-The Family Health Dashboard System is a web-based application designed to help families manage and track medical information in a centralized, role-based, and secure environment. The system supports multiple user roles including patients, doctors, and lab technicians.
+A role-based healthcare records system for families. Patients, doctors, lab
+technicians, administrators and pharmacy staff each get a portal scoped to their
+role and their own records.
 
-## Problem Statement
-Health records are often fragmented across different facilities and paper-based systems. This project aims to centralize medical information while maintaining privacy, access control, and usability for different stakeholders.
+Built with PHP and MySQL on Linux, with HTML, CSS and JavaScript on the front
+end.
 
-## Key Features
-- Role-based access control (Patient, Doctor, Lab Technician)
+**[Read the full case study →](https://giturag.github.io/projects/family-health-dashboard.html)**
+
+## Features
+
+- Role-based access for patients (and dependents), doctors, lab technicians,
+  administrators and pharmacists
 - Appointment scheduling and visit tracking
-- Lab test requests and result entry
+- Lab test requests, sample collection and result entry
 - Prescription management
-- Patient vitals and medical history tracking
-- Authentication and session management
-
-## Tech Stack
-- **Backend:** PHP
-- **Database:** MySQL
-- **Frontend:** HTML, CSS, JavaScript
-- **Environment:** Linux
-- **Tools:** Git, VS Code
-
-## Security Considerations
-- Role-based access control (RBAC) to restrict sensitive data
-- Input validation to reduce SQL injection and XSS risks
-- Session-based authentication
-- Principle of least privilege applied across user roles
-
-## What I Learned
-- Designing relational databases for real-world healthcare data
-- Implementing authentication and authorization logic
-- Thinking about security early in application design
-- Managing multi-role workflows in a single system
-- Debugging and maintaining a growing codebase
-
-## Future Improvements
-- Password hashing and stronger authentication mechanisms
-- Audit logging for user actions
-- Encryption of sensitive data
-- API-based architecture
-- Two-factor authentication (2FA)
+- Patient vitals, allergies, chronic conditions and medical history
+- Billing and payment status
+- Authentication, CSRF protection and object-level authorisation
 
 ## Screenshots
 
-### Landing Page
-![Landing Page](docs/screenshots/landing-page.png)
+![Patient dashboard](docs/screenshots/patient-dashboard.png)
 
-### Login Page
-![Login](docs/screenshots/login.png)
+![Doctor dashboard](docs/screenshots/doctor-dashboard.png)
 
-### Patient Dashboard
-![Patient Dashboard](docs/screenshots/patient-dashboard.png)
+More screenshots — landing page, login, consultation, lab results and admin
+dashboard — are in the [case study](https://giturag.github.io/projects/family-health-dashboard.html)
+and in `docs/screenshots/`.
 
-### Doctor Dashboard
-![Doctor Dashboard](docs/screenshots/doctor-dashboard.png)
+## Tech stack
 
-### Lab Results
-![Lab Results](docs/screenshots/lab-results.png)
+PHP · MySQL · HTML · CSS · JavaScript · Apache/Linux
 
-## Admin Dashboard
-![Admin Dashboard](docs/screenshots/admin-dashboard.png)
+## Requirements
 
-## Database Schema
-![Database Schema](docs/screenshots/ERD%20Diagram.png)
+- PHP 8.1+ with the `mysqli` extension (tested on PHP 8.3)
+- MySQL 8.0+ (the schema uses the `utf8mb4_0900_ai_ci` collation)
+- Apache with `AllowOverride All`, or equivalent Nginx deny rules for `app/`
+  and `config/`
 
+## Setup
 
-## Security & Privacy Note
-This repository contains a sanitized and partial representation of the system.
-Sensitive configuration details, credentials, and patient data handling logic
-have been intentionally excluded to protect privacy and security.
+1. Clone the repository.
+
+   ```sh
+   git clone https://github.com/giturag/family-health-dashboard.git
+   cd family-health-dashboard
+   ```
+
+2. Create the database and tables. The dump creates the `fhddb` database and
+   all 17 tables.
+
+   ```sh
+   mysql -u root -p < sql/schema.sql
+   ```
+
+   Create a MySQL user for the application (or use an existing account) and
+   grant it privileges on `fhddb`.
+
+3. Create the local configuration and fill in the database credentials.
+
+   ```sh
+   cp config/config.example.php config/config.local.php
+   ```
+
+   Alternatively, set `FHD_DB_HOST`, `FHD_DB_NAME`, `FHD_DB_USER` and
+   `FHD_DB_PASS` in the environment. Never commit `config/config.local.php`;
+   it is already ignored by git.
+
+4. Start the development server from the repository root.
+
+   ```sh
+   php -S localhost:8000
+   ```
+
+5. Open <http://localhost:8000> and create an account. Self-registration
+   supports patient, doctor and lab-technician roles. To create an
+   administrator, sign up and then promote the account:
+
+   ```sql
+   UPDATE subscribers SET sub_role = 'admin' WHERE email = 'you@example.com';
+   ```
+
+   Sign out and back in for the new role to take effect.
+
+The built-in PHP server does not honour `.htaccess`. Application and config PHP
+files execute rather than expose source, but deploy behind Apache or Nginx with
+the included deny rules (or equivalent) for anything public.
+
+## Project structure
+
+```
+app/         bootstrap, authentication, CSRF and shared helpers
+admin/       administrator portal
+doctor/      doctor and specialist portal
+lab/         lab technician portal
+myhealth/    patient and dependent portal
+pharma/      pharmacy dashboard
+config/      config.example.php (config.local.php is gitignored)
+migrations/  incremental SQL migrations
+sql/         schema.sql
+docs/        screenshots and ERD
+css/, img/   shared styles and logo
+```
+
+## Security
+
+- Database credentials live in `config/config.local.php`, which is gitignored;
+  no secrets are committed.
+- Passwords are stored with `password_hash()` and checked with
+  `password_verify()`.
+- Prepared statements for user input, with HTML escaping on output.
+- CSRF tokens on state-changing forms and POST-only deletes.
+- Role checks plus object-level ownership checks for patient records.
+- HttpOnly, SameSite=Lax session cookies; `Secure` when HTTPS is detected.
+- Error display is off by default; errors are logged instead.
+
+See [SECURITY.md](SECURITY.md) for the controls and known limitations.
+
+## Status
+
+This is a sanitised public snapshot of a university project. It contains the
+application source and a schema-only database dump; no patient data or local
+configuration is included. The payment flow records status only (there is no
+payment-gateway integration), and the pharmacy dashboard does not yet include a
+dispensing workflow. Automated tests and CI are not included.
